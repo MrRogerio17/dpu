@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simulado - Defensoria Pública</title>
+<style>
+  :root {
+    --bg-dark: #121212;
+    --text-dark: #f1f1f1;
+    --accent: #007f5f;
+
+    --bg-light: #fff;
+    --text-light: #000;
+  }
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+    transition: background-color 0.3s, color 0.3s;
+  }
+  body.light-mode {
+    background-color: var(--bg-light);
+    color: var(--text-light);
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem;
+    background-color: #1e1e1e;
+    border-bottom: 2px solid #333;
+    transition: background-color 0.3s, border-color 0.3s;
+  }
+  body.light-mode header {
+    background-color: #f1f1f1;
+    border-bottom: 2px solid #ccc;
+  }
+  header img {
+    height: 50px;
+  }
+  .container {
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 1rem 2rem;
+  }
+  #identification, #quiz, #result, #alreadyAnswered {
+    display: none;
+  }
+  #identification.active, #quiz.active, #result.active, #alreadyAnswered.active {
+    display: block;
+  }
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: inherit;
+    color: inherit;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+  }
+  body.light-mode input[type="text"] {
+    border-color: #aaa;
+  }
+  button {
+    background-color: var(--accent);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background-color: #005f40;
+  }
+  .timer {
+    font-weight: bold;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+  .theme-toggle {
+    cursor: pointer;
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    color: var(--accent);
+    transition: color 0.3s;
+  }
+  body.light-mode .theme-toggle {
+    color: #007f5f;
+  }
+  h2 {
+    margin-top: 0;
+  }
+</style>
+</head>
+<body>
+<header>
+  <img src="https://neamp.pucsp.br/images/logos/defensoria-publica-da-uniao-dpu.png" alt="Logo DPU" />
+  <button class="theme-toggle" aria-label="Alternar tema">🌙</button>
+</header>
+
+<div class="container">
+  <div id="alreadyAnswered" class="active" style="text-align:center;">
+    <h2>Você já respondeu esse simulado.</h2>
+    <p>Respostas múltiplas não são permitidas.</p>
+  </div>
+
+  <div id="identification">
+    <h2>Identificação</h2>
+    <label for="discord">Nick do Discord:</label>
+    <input type="text" id="discord" required />
+    <label for="roblox">Nick do Roblox:</label>
+    <input type="text" id="roblox" required />
+    <button id="startBtn">Iniciar</button>
+  </div>
+
+  <div id="quiz">
+    <div class="timer" id="timer"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="result" style="text-align:center;">
+    <h2>Respostas enviadas!</h2>
+  </div>
+</div>
+
+<script>
+  const questions = [
+    { q: "O que é AÇÃO PENAL PÚBLICA?", options: [
+      "Processo movido por iniciativa do juiz",
+      "Ação proposta pelo Ministério Público",
+      "Ação de iniciativa da vítima",
+      "Ação sem participação do Estado"
+    ]},
+    { q: "O que é in dubio pro reo?", options: [
+      "Regra que favorece o réu em caso de dúvida",
+      "Direito de recorrer em liberdade",
+      "Princípio que dá poder ao juiz",
+      "Garantia de indenização por danos morais"
+    ]},
+    { q: "Papel do Defensor na Audiência de custódia:", options: [
+      "Garantir direitos e verificar legalidade da prisão",
+      "Condenar sumariamente o réu",
+      "Emitir parecer técnico pericial",
+      "Assumir a acusação contra o réu"
+    ]},
+    { q: "O que alegar pra um Trancamento da Ação Penal?", options: [
+      "Falta de justa causa ou atipicidade do fato",
+      "Pedido de habeas corpus preventivo",
+      "Apelação direta ao STJ",
+      "Revisão criminal sumária"
+    ]},
+    { q: "Qual das alternativas pode ser possível Propor Acordo ou Pedido de Substituição da Pena?", options: [
+      "Crime sem violência ou grave ameaça",
+      "Crimes hediondos",
+      "Crimes dolosos contra a vida",
+      "Crimes de tortura"
+    ]},
+    { q: "Para que serve o habeas corpus?", options: [
+      "Proteger a liberdade de locomoção",
+      "Requerer indenização por danos morais",
+      "Garantir prova testemunhal",
+      "Solicitar guarda de menor"
+    ]},
+    { q: "Para o que serve o mandado de segurança?", options: [
+      "Proteger direito líquido e certo",
+      "Solicitar prisão preventiva",
+      "Apelar de sentença condenatória",
+      "Desconstituir prova material"
+    ]},
+    { q: "Tipos de flagrante:", options: [
+      "Próprio, impróprio, presumido e preparado",
+      "Legal, ilegal e duvidoso",
+      "Civil, penal e tributário",
+      "Administrativo, judicial e popular"
+    ]},
+    { q: "O que configura falta de provas?", options: [
+      "Ausência de elementos que sustentem a denúncia",
+      "Testemunhas demais",
+      "Réu confesso sem advogado",
+      "Demora no julgamento"
+    ]},
+    { q: "Seu cliente foi abordado pela PM e foi preso por homicídio por estar com um taco após um chamado de morte na região. Seu cliente é réu primário, não tem antecedentes e a única prova é o depoimento dos policiais. O que fazer?", options: [
+      "Pedir liberdade por ausência de justa causa e fragilidade probatória",
+      "Confessar parcialmente e solicitar acordo de não persecução",
+      "Alegar suspeição da vítima",
+      "Propor transação penal"
+    ]}
+  ];
+
+  let currentIndex = 0;
+  let answers = [];
+  let timerId = null;
+  let timeLeft = 35;
+
+  const alreadyAnsweredEl = document.getElementById("alreadyAnswered");
+  const identificationEl = document.getElementById("identification");
+  const quizEl = document.getElementById("quiz");
+  const resultEl = document.getElementById("result");
+  const questionContainer = document.getElementById("questionContainer");
+  const timerEl = document.getElementById("timer");
+  const startBtn = document.getElementById("startBtn");
+
+  // Bloqueia Ctrl+C e Ctrl+V
+  document.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v')) {
+      e.preventDefault();
+    }
+  });
+
+  // Tema claro/escuro
+  const themeToggle = document.querySelector(".theme-toggle");
+  themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("light-mode");
+  });
+
+  // Verifica se já respondeu
+  function checkIfAnswered() {
+    if(localStorage.getItem("respondeu_formulario_dpu")) {
+      alreadyAnsweredEl.classList.add("active");
+      identificationEl.classList.remove("active");
+      quizEl.classList.remove("active");
+      resultEl.classList.remove("active");
+      return true;
+    }
+    return false;
+  }
+
+  // Inicia o quiz
+  function startQuiz() {
+    const discord = document.getElementById("discord").value.trim();
+    const roblox = document.getElementById("roblox").value.trim();
+    if(!discord || !roblox) {
+      alert("Preencha todos os campos!");
+      return;
+    }
+    answers = [discord, roblox];
+    currentIndex = 0;
+    identificationEl.classList.remove("active");
+    quizEl.classList.add("active");
+    showQuestion();
+  }
+
+  // Mostra pergunta atual
+  function showQuestion() {
+    if(currentIndex >= questions.length) {
+      sendResults();
+      return;
+    }
+    const q = questions[currentIndex];
+    questionContainer.innerHTML = `<h3>${currentIndex + 1}) ${q.q}</h3>` +
+      q.options.map(opt => `<label><input type="radio" name="option" value="${opt}"> ${opt}</label>`).join("");
+    timeLeft = 35;
+    timerEl.textContent = `Tempo: ${timeLeft}s`;
+    clearInterval(timerId);
+    timerId = setInterval(() => {
+      timeLeft--;
+      timerEl.textContent = `Tempo: ${timeLeft}s`;
+      if(timeLeft <= 0) {
+        clearInterval(timerId);
+        recordAnswer(null);
+      }
+    }, 1000);
+  }
+
+  // Registra resposta e avança
+  function recordAnswer(selectedValue) {
+    if(selectedValue === null) {
+      answers.push(""); // resposta em branco se acabar o tempo
+    } else {
+      answers.push(selectedValue);
+    }
+    currentIndex++;
+    showQuestion();
+  }
+
+  // Evento de seleção de resposta
+  questionContainer.addEventListener("change", e => {
+    if(e.target.name === "option") {
+      clearInterval(timerId);
+      recordAnswer(e.target.value);
+    }
+  });
+
+  // Envia resultados para Apps Script
+  function sendResults() {
+    quizEl.classList.remove("active");
+    resultEl.classList.add("active");
+    localStorage.setItem("respondeu_formulario_dpu", "true");
+
+    // Monta objeto com respostas para envio
+    let dataToSend = {};
+    answers.forEach((a,i) => {
+      dataToSend["q"+i] = a;
+    });
+
+    fetch("https://script.google.com/macros/s/AKfycbyi3hRL8aWO4nk_8wlRYd2n9fweOClkkWxtERNG8kCRAwFqL7yYIye6ajPCdPAqL4AWYw/exec", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(dataToSend)
+    }).catch(() => {
+      console.warn("Falha ao enviar os dados.");
+    });
+  }
+
+  // Inicialização
+  window.onload = () => {
+    if(!checkIfAnswered()) {
+      alreadyAnsweredEl.classList.remove("active");
+      identificationEl.classList.add("active");
+    }
+  };
+
+  startBtn.addEventListener("click", startQuiz);
+</script>
+</body>
+</html>
